@@ -1,4 +1,4 @@
-package main
+package cmd
 
 import (
 	"context"
@@ -12,6 +12,7 @@ import (
 
 	"github.com/spf13/cobra"
 	"github.com/spf13/viper"
+	"github.com/usememos/memos/desktop"
 
 	"github.com/usememos/memos/internal/profile"
 	"github.com/usememos/memos/internal/version"
@@ -21,6 +22,12 @@ import (
 	"github.com/usememos/memos/store/db"
 )
 
+// sync memos server status
+var (
+	ServerReady    = make(chan struct{})
+	ServerShutdown = make(chan struct{})
+	c              chan os.Signal
+)
 var (
 	rootCmd = &cobra.Command{
 		Use:   "memos",
@@ -66,7 +73,7 @@ var (
 				return
 			}
 
-			c := make(chan os.Signal, 1)
+			c = make(chan os.Signal, 1)
 			// Trigger graceful shutdown on SIGINT or SIGTERM.
 			// The default signal sent by the `kill` command is SIGTERM,
 			// which is taken as the graceful shutdown signal for many systems, eg., Kubernetes, Gunicorn.
@@ -84,12 +91,16 @@ var (
 
 			go func() {
 				<-c
+				slog.Info("[Memos Server] server shutting down")
 				s.Shutdown(ctx)
 				cancel()
+				close(ServerShutdown)
 			}()
 
 			// Wait for CTRL-C.
-			<-ctx.Done()
+			// <-ctx.Done()
+			close(ServerReady)
+			slog.Info("[Memos server] server is ready")
 		},
 	}
 )
@@ -179,4 +190,18 @@ func main() {
 	if err := rootCmd.Execute(); err != nil {
 		os.Exit(1)
 	}
+}
+
+// ShutdownMemosServer memos server
+func ShutdownMemosServer() {
+	c <- syscall.SIGTERM
+}
+
+// StartMemosServer start memos server by customize
+// main() will cause error after build "This is a command line tool. You need to open cmd.exe and run it from there"
+func StartMemosServer() {
+	// bypass cobra windows mousetrap check
+	cobra.MousetrapHelpText = ""
+	viper.Set("port", desktop.GetMemosBackendPost())
+	main()
 }

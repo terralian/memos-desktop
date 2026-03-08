@@ -5,3 +5,5 @@ dist
 dist-ssr
 *.local
 src/types/proto/store
+wailsjs
+package.json.md5

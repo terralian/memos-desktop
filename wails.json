@@ -1,0 +1,14 @@
+{
+  "$schema": "https://wails.io/schemas/config.v2.json",
+  "name": "memos-desktop",
+  "outputfilename": "memos-desktop",
+  "frontend:dir": "web",
+  "frontend:install": "pnpm install",
+  "frontend:build": "pnpm release",
+  "frontend:dev:watcher": "pnpm dev",
+  "frontend:dev:serverUrl": "http://localhost:34561/",
+  "author": {
+    "name": "terralian",
+    "email": "630985301@qq.com"
+  }
+}

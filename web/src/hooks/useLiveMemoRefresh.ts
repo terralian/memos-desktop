@@ -71,6 +71,14 @@ export function useLiveMemoRefresh() {
     let mounted = true;
     let retryTimeout: ReturnType<typeof setTimeout> | null = null;
 
+    // https://github.com/wailsapp/wails/issues/2847
+    // Wails not support SSE
+    // @ts-ignore
+    if(window["wails"]) {
+      setSSEStatus("connected");
+      return;
+    }
+
     const connect = async () => {
       if (!mounted) return;
 
